@@ -1,8 +1,9 @@
-
 #pragma once
 
 #include "replacer.h"
 #include "config.h"
+
+#include <vector>
 
 /**
  * ClockReplacer implements the clock replacement policy, which approximates the Least Recently Used policy.
@@ -12,9 +13,9 @@ class ClockReplacer : public Replacer
 public:
     /**
      * Create a new ClockReplacer.
-     * @param num_pages the maximum number of pages the ClockReplacer will be required to store
+     * @param num_frames the maximum number of frames the ClockReplacer will be required to store
      */
-    explicit ClockReplacer(size_t num_pages);
+    explicit ClockReplacer(size_t num_frames);
 
     /**
      * Destroys the ClockReplacer.
@@ -30,5 +31,14 @@ public:
     auto Size() -> size_t override;
 
 private:
-    // TODO(student): implement me!
+    struct FrameInfo
+    {
+        bool ref_bit;        // has the frame been recently unpinned (ref flag set to false)?
+        bool is_in_replacer; // is the frame currently in the replacer?
+    };
+
+    size_t num_frames_;             // total number of frames in BPM
+    std::vector<FrameInfo> frames_; // represents the frames in the buffer pool
+    size_t clock_hand_;
+    size_t num_frames_in_replacer;
 };
