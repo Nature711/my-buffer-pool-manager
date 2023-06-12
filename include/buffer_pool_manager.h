@@ -1,5 +1,4 @@
-#ifndef BUFFER_POOL_MANAGER_H
-#define BUFFER_POOL_MANAGER_H
+#pragma once
 
 #include "page.h"
 #include "clock_replacer.h"
@@ -12,5 +11,3 @@ public:
 
     // Your code here
 };
-
-#endif // BUFFER_POOL_MANAGER_H
