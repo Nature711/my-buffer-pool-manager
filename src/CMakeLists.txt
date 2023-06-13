@@ -1,5 +1,5 @@
 # Add the source files
-set(SOURCES main.cpp buffer_pool_manager.cpp clock_replacer.cpp)
+set(SOURCES main.cpp buffer_pool_manager.cpp clock_replacer.cpp disk_manager.cpp)
 
 # Create the library target
 add_library(buffer_pool_manager ${SOURCES})
