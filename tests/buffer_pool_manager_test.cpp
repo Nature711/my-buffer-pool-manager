@@ -1,17 +1,29 @@
 #include "buffer_pool_manager.h"
 #include <gtest/gtest.h>
 
-// Example test case
-TEST(BufferPoolManagerTest, ExampleTest)
+TEST(BufferPoolManagerTest, NewPageTest)
 {
     // Create an instance of the buffer pool manager
-    BufferPoolManager buffer_pool_manager;
+    std::string filename = "database.db";
+    DiskManager disk_manager(filename);
+    ClockReplacer clock_replacer(BUFFER_POOL_SIZE);
+    BufferPoolManager buffer_pool_manager(BUFFER_POOL_SIZE, &disk_manager, &clock_replacer);
 
     // Perform test operations
-    // ...
-
-    // Assert test results
-    // ASSERT_... statements
+    page_id_t page_id;
+    Page *page;
+    for (int i = 0; i < 10; ++i)
+    {
+        page = buffer_pool_manager.NewPage(&page_id);
+        // Assert that the page allocation is successful
+        ASSERT_NE(page, nullptr);
+        // Print the page information
+        std::cout << "Allocated page: " << page_id << std::endl;
+        std::cout << "Pin Count: " << page->GetPinCount() << std::endl;
+        std::cout << "Is Dirty: " << (page->IsDirty() ? "true" : "false") << std::endl;
+        // Assert any other properties of the page
+        // ...
+    }
 }
 
 // More test cases...
