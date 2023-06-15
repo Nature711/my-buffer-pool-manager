@@ -33,7 +33,7 @@ public:
     auto GetPoolSize() -> size_t { return pool_size_; }
 
     /** @brief Return the pointer to all the pages in the buffer pool. */
-    auto GetPages() -> Page * { return pages_; }
+    auto GetPages() -> Page * { return buffer_pool_pages_; }
 
     /**
      * TODO(P1): Add implementation
@@ -129,7 +129,7 @@ private:
     std::atomic<page_id_t> next_page_id_{0};
 
     /** Array of buffer pool pages. */
-    Page *pages_;
+    Page *buffer_pool_pages_;
     /** Pointer to the disk manager. */
     DiskManager *disk_manager_ __attribute__((__unused__));
     /** Page table for keeping track of buffer pool pages. */
