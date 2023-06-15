@@ -16,3 +16,6 @@ target_link_libraries(BufferPoolManagerTest gtest gtest_main buffer_pool_manager
 # Include the tests as a build target
 enable_testing()
 add_test(NAME BufferPoolManagerTest COMMAND BufferPoolManagerTest)
+
+# # Enable output of cout during test execution
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --gtest_print_time=0")
