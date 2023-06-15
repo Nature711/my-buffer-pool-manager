@@ -1,10 +1,15 @@
 #include "disk_manager.h"
 
+#include <iostream>
+#include <string>
+
 DiskManager::DiskManager(const std::string &filename)
 {
+
     file_.open(filename, std::ios::binary | std::ios::in | std::ios::out | std::ios::app);
     if (!file_)
     {
+        std::cout << "Failed to create database file" << std::endl;
         // Handle error, such as file not found or unable to open
     }
 }

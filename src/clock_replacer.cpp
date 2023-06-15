@@ -1,4 +1,5 @@
 #include "clock_replacer.h"
+#include <iostream>
 
 ClockReplacer::ClockReplacer(size_t num_frames) : num_frames_(num_frames), clock_hand_(0), num_frames_in_replacer(0)
 {

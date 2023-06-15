@@ -21,8 +21,6 @@ TEST(BufferPoolManagerTest, NewPageTest)
         std::cout << "Allocated page: " << page_id << std::endl;
         std::cout << "Pin Count: " << page->GetPinCount() << std::endl;
         std::cout << "Is Dirty: " << (page->IsDirty() ? "true" : "false") << std::endl;
-        // Assert any other properties of the page
-        // ...
     }
 }
 

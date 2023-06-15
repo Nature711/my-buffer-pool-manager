@@ -6,9 +6,9 @@
 #include <mutex> // NOLINT
 #include <unordered_map>
 
+#include "clock_replacer.h"
 #include "disk_manager.h"
 #include "page.h"
-#include "clock_replacer.h"
 
 /**
  * BufferPoolManager reads disk pages to and from its internal buffer pool.
@@ -20,7 +20,7 @@ public:
      * @brief Creates a new BufferPoolManager.
      * @param pool_size the size of the buffer pool
      * @param disk_manager the disk manager
-     * @param replacer the replacer used
+     * @param clock_replacer the replacer used
      */
     BufferPoolManager(size_t pool_size, DiskManager *disk_manager, ClockReplacer *clock_replacer);
 
@@ -135,7 +135,7 @@ private:
     /** Page table for keeping track of buffer pool pages. */
     std::unordered_map<page_id_t, frame_id_t> page_table_;
     /** Replacer to find unpinned pages for replacement. */
-    std::unique_ptr<ClockReplacer> clock_replacer_;
+    ClockReplacer *clock_replacer_;
     /** List of free frames that don't have any pages on them. */
     std::list<frame_id_t> free_list_;
     /** This latch protects shared data structures. We recommend updating this comment to describe what it protects. */
@@ -145,7 +145,11 @@ private:
      * @brief Allocate a page on disk. Caller should acquire the latch before calling this function.
      * @return the id of the allocated page
      */
-    auto AllocatePage() -> page_id_t;
+    auto AllocatePage() -> page_id_t
+    {
+        ++next_page_id_;
+        return next_page_id_;
+    }
 
     /**
      * @brief Deallocate a page on disk. Caller should acquire the latch before calling this function.
