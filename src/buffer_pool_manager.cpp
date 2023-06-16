@@ -131,8 +131,32 @@ Page *BufferPoolManager::FetchPage(page_id_t page_id)
 
 bool BufferPoolManager::UnpinPage(page_id_t page_id, bool is_dirty)
 {
-    // TODO: Implement UnpinPage
-    return false;
+    std::lock_guard<std::mutex> lock(latch_);
+
+    // Check if the page is already in the buffer pool
+    auto it = page_table_.find(page_id);
+    if (it == page_table_.end())
+    {
+        return false;
+    }
+
+    // Page found in the buffer pool, get the frame ID
+    frame_id_t frame_id = it->second;
+    Page &target = buffer_pool_pages_[frame_id];
+    if (target.GetPinCount() <= 0)
+    {
+        return false;
+    }
+
+    // If pin count becomes 0 after decrementing, make the frame evictable by the replacer
+    target.pin_count_ = target.pin_count_ - 1;
+    if (target.pin_count_ == 0)
+    {
+        clock_replacer_->Unpin(frame_id);
+    }
+    target.is_dirty_ = is_dirty;
+
+    return true;
 }
 
 bool BufferPoolManager::FlushPage(page_id_t page_id)

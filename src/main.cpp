@@ -12,7 +12,7 @@ int main()
     BufferPoolManager buffer_pool_manager(BUFFER_POOL_SIZE, &disk_manager, &clock_replacer);
 
     // new page
-    for (int i = 0; i < 10; ++i)
+    for (int i = 1; i < 5; ++i)
     {
         page_id_t page_id;
         Page *page = buffer_pool_manager.NewPage(&page_id);
@@ -20,7 +20,6 @@ int main()
         {
             std::cout << "Allocated page: " << page_id << std::endl;
             std::cout << "Pin Count: " << page->GetPinCount() << std::endl;
-            std::cout << "Is Dirty: " << (page->IsDirty() ? "true" : "false") << std::endl;
         }
         else
         {
@@ -29,7 +28,7 @@ int main()
     }
 
     // fetch page
-    for (int i = 0; i < 10; ++i)
+    for (int i = 1; i < 5; ++i)
     {
         page_id_t page_id = i; // Replace with the desired page ID
         Page *page = buffer_pool_manager.FetchPage(page_id);
@@ -44,6 +43,24 @@ int main()
         else
         {
             std::cout << "Page not found or unavailable." << std::endl;
+        }
+    }
+
+    for (int i = 1; i < 8; ++i)
+    {
+        // Unpin the page
+        page_id_t page_id = i; // Replace with the desired page ID
+        bool is_dirty = true;
+        bool result = buffer_pool_manager.UnpinPage(page_id, is_dirty);
+
+        // Check the result
+        if (result)
+        {
+            std::cout << "Page unpinned successfully." << std::endl;
+        }
+        else
+        {
+            std::cout << "Failed to unpin page." << std::endl;
         }
     }
 
