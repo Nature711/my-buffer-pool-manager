@@ -27,7 +27,10 @@ TEST(BufferPoolManagerTest, NewPageTest)
 TEST(BufferPoolManagerTest, FetchPageTest)
 {
     // Create an instance of the buffer pool manager
-    BufferPoolManager buffer_pool_manager;
+    std::string filename = "database.db";
+    DiskManager disk_manager(filename);
+    ClockReplacer clock_replacer(BUFFER_POOL_SIZE);
+    BufferPoolManager buffer_pool_manager(BUFFER_POOL_SIZE, &disk_manager, &clock_replacer);
 
     // Call FetchPage
     page_id_t page_id = 1; // Replace with the desired page ID
@@ -39,6 +42,27 @@ TEST(BufferPoolManagerTest, FetchPageTest)
     // Print the fetched page's information
     std::cout << "Fetched Page ID: " << page->GetPageId() << std::endl;
     std::cout << "Fetched Page Data: " << page->GetData() << std::endl;
+}
+
+TEST(BufferPoolManagerTest, UnpinPageTest)
+{
+    // Create a buffer pool manager instance
+    DiskManager disk_manager;     // Create a DiskManager instance
+    ClockReplacer clock_replacer; // Create a ClockReplacer instance
+    size_t pool_size = 10;        // Set the buffer pool size
+    BufferPoolManager buffer_pool_manager(pool_size, &disk_manager, &clock_replacer);
+
+    // Create a new page
+    page_id_t page_id;
+    Page *new_page = buffer_pool_manager.NewPage(&page_id);
+    // Perform operations on the new page
+
+    // Unpin the page
+    bool is_dirty = true;
+    bool result = buffer_pool_manager.UnpinPage(page_id, is_dirty);
+
+    // Check the result
+    EXPECT_TRUE(result);
 }
 
 int main(int argc, char **argv)
