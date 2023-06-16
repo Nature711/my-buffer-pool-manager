@@ -47,10 +47,10 @@ TEST(BufferPoolManagerTest, FetchPageTest)
 TEST(BufferPoolManagerTest, UnpinPageTest)
 {
     // Create a buffer pool manager instance
-    DiskManager disk_manager;     // Create a DiskManager instance
-    ClockReplacer clock_replacer; // Create a ClockReplacer instance
-    size_t pool_size = 10;        // Set the buffer pool size
-    BufferPoolManager buffer_pool_manager(pool_size, &disk_manager, &clock_replacer);
+    std::string filename = "database.db";
+    DiskManager disk_manager(filename);
+    ClockReplacer clock_replacer(BUFFER_POOL_SIZE);
+    BufferPoolManager buffer_pool_manager(BUFFER_POOL_SIZE, &disk_manager, &clock_replacer);
 
     // Create a new page
     page_id_t page_id;

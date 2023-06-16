@@ -55,10 +55,11 @@ Page *BufferPoolManager::NewPage(page_id_t *page_id)
     // Allocate a new page id
     *page_id = AllocatePage();
     // Reset the memory and metadata of the new page
-    buffer_pool_pages_[frame_id].ResetMemory();
-    buffer_pool_pages_[frame_id].page_id_ = *page_id;
-    buffer_pool_pages_[frame_id].pin_count_ = 1;
-    buffer_pool_pages_[frame_id].is_dirty_ = false;
+    Page &new_page = buffer_pool_pages_[frame_id];
+    new_page.ResetMemory();
+    new_page.page_id_ = *page_id;
+    new_page.pin_count_ = 1;
+    new_page.is_dirty_ = false;
 
     // Pin the frame and record the access history in the clock replacer
     clock_replacer_->Pin(frame_id);
@@ -66,7 +67,7 @@ Page *BufferPoolManager::NewPage(page_id_t *page_id)
     // Update the page table
     page_table_[*page_id] = frame_id;
 
-    return &buffer_pool_pages_[frame_id];
+    return &new_page;
 }
 
 Page *BufferPoolManager::FetchPage(page_id_t page_id)
@@ -113,20 +114,21 @@ Page *BufferPoolManager::FetchPage(page_id_t page_id)
         }
     }
 
+    Page &target = buffer_pool_pages_[frame_id];
     // Read the requested page from disk
-    disk_manager_->ReadPage(page_id, buffer_pool_pages_[frame_id].GetData());
+    disk_manager_->ReadPage(page_id, target.GetData());
 
     // Reset the memory and metadata of the new page
-    buffer_pool_pages_[frame_id].page_id_ = page_id;
-    buffer_pool_pages_[frame_id].pin_count_ = 1;
-    buffer_pool_pages_[frame_id].is_dirty_ = false;
+    target.page_id_ = page_id;
+    target.pin_count_ = 1;
+    target.is_dirty_ = false;
 
     // Pin the frame and record the access history in the clock replacer
     clock_replacer_->Pin(frame_id);
     // Update the page table
     page_table_[page_id] = frame_id;
     // Return a pointer to the requested page
-    return &buffer_pool_pages_[frame_id];
+    return &target;
 }
 
 bool BufferPoolManager::UnpinPage(page_id_t page_id, bool is_dirty)
@@ -161,17 +163,62 @@ bool BufferPoolManager::UnpinPage(page_id_t page_id, bool is_dirty)
 
 bool BufferPoolManager::FlushPage(page_id_t page_id)
 {
-    // TODO: Implement FlushPage
-    return false;
+    std::lock_guard<std::mutex> lock(latch_);
+
+    // Check if the page is already in the buffer pool
+    auto it = page_table_.find(page_id);
+    if (it == page_table_.end())
+    {
+        return false;
+    }
+
+    // Page found in the buffer pool, get the frame ID
+    frame_id_t frame_id = it->second;
+    Page &target = buffer_pool_pages_[frame_id];
+    disk_manager_->WritePage(page_id, target.GetData());
+    target.is_dirty_ = false;
+
+    return true;
 }
 
 void BufferPoolManager::FlushAllPages()
 {
-    // TODO: Implement FlushAllPage
+    std::lock_guard<std::mutex> lock(latch_);
+
+    for (size_t i = 0; i < pool_size_; ++i)
+    {
+        Page &page = buffer_pool_pages_[i];
+        FlushPage(page.GetPageId());
+    }
 }
 
 bool BufferPoolManager::DeletePage(page_id_t page_id)
 {
-    // TODO: Implement DeletePage
-    return false;
+    std::lock_guard<std::mutex> lock(latch_);
+
+    // Check if the page is already in the buffer pool
+    auto it = page_table_.find(page_id);
+    if (it == page_table_.end())
+    {
+        return true;
+    }
+    // Page found in the buffer pool, get the frame ID
+    frame_id_t frame_id = it->second;
+    Page &target = buffer_pool_pages_[frame_id];
+    if (target.GetPinCount() > 0)
+    {
+        return false;
+    }
+    page_table_.erase(target.GetPageId());
+
+    clock_replacer_->RemoveFromReplacer(frame_id);
+
+    free_list_.push_back(frame_id);
+
+    target.ResetMemory();
+    target.page_id_ = INVALID_PAGE_ID;
+    target.pin_count_ = 0;
+    target.is_dirty_ = false;
+
+    return true;
 }

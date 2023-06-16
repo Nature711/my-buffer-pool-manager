@@ -56,3 +56,9 @@ auto ClockReplacer::Size() -> size_t
 {
     return num_frames_in_replacer;
 }
+
+void ClockReplacer::RemoveFromReplacer(frame_id_t frame_id)
+{
+    frames_[frame_id].is_in_replacer = false;
+    num_frames_in_replacer--;
+}

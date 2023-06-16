@@ -64,5 +64,22 @@ int main()
         }
     }
 
+    for (int i = 1; i < 4; ++i)
+    {
+        // Unpin the page
+        page_id_t page_id = i; // Replace with the desired page ID
+        bool result = buffer_pool_manager.FlushPage(page_id);
+
+        // Check the result
+        if (result)
+        {
+            std::cout << "Page flushed successfully." << std::endl;
+        }
+        else
+        {
+            std::cout << "Failed to flush page." << std::endl;
+        }
+    }
+
     return 0;
 }

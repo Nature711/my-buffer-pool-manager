@@ -30,6 +30,8 @@ public:
 
     auto Size() -> size_t override;
 
+    void RemoveFromReplacer(frame_id_t frame_id);
+
 private:
     struct FrameInfo
     {
