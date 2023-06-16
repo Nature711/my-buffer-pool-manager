@@ -71,12 +71,62 @@ Page *BufferPoolManager::NewPage(page_id_t *page_id)
 
 Page *BufferPoolManager::FetchPage(page_id_t page_id)
 {
-    if (page_table_.count(page_id) > 0)
+
+    std::lock_guard<std::mutex> lock(latch_);
+
+    // Check if the page is already in the buffer pool
+    auto it = page_table_.find(page_id);
+    if (it != page_table_.end())
     {
-        frame_id_t frame_id = page_table_[page_id];
+        // Page found in the buffer pool, get the frame ID
+        frame_id_t frame_id = it->second;
+
+        // Disable eviction and record the access history of the frame
         clock_replacer_->Pin(frame_id);
+
+        // Return a pointer to the requested page
         return &buffer_pool_pages_[frame_id];
     }
+
+    frame_id_t frame_id;
+    if (!free_list_.empty())
+    {
+        frame_id = free_list_.front();
+        free_list_.pop_front();
+    }
+    else
+    {
+        if (!clock_replacer_->Victim(&frame_id))
+        {
+            // if no replacement frame is available, return nullptr
+            return nullptr;
+        }
+        else
+        {
+            // Flush the evicted page to disk if it's dirty
+            Page &victim = buffer_pool_pages_[frame_id];
+            if (victim.IsDirty())
+            {
+                disk_manager_->WritePage(victim.GetPageId(), victim.GetData());
+            }
+            page_table_.erase(victim.GetPageId());
+        }
+    }
+
+    // Read the requested page from disk
+    disk_manager_->ReadPage(page_id, buffer_pool_pages_[frame_id].GetData());
+
+    // Reset the memory and metadata of the new page
+    buffer_pool_pages_[frame_id].page_id_ = page_id;
+    buffer_pool_pages_[frame_id].pin_count_ = 1;
+    buffer_pool_pages_[frame_id].is_dirty_ = false;
+
+    // Pin the frame and record the access history in the clock replacer
+    clock_replacer_->Pin(frame_id);
+    // Update the page table
+    page_table_[page_id] = frame_id;
+    // Return a pointer to the requested page
+    return &buffer_pool_pages_[frame_id];
 }
 
 bool BufferPoolManager::UnpinPage(page_id_t page_id, bool is_dirty)

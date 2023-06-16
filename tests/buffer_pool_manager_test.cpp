@@ -24,7 +24,22 @@ TEST(BufferPoolManagerTest, NewPageTest)
     }
 }
 
-// More test cases...
+TEST(BufferPoolManagerTest, FetchPageTest)
+{
+    // Create an instance of the buffer pool manager
+    BufferPoolManager buffer_pool_manager;
+
+    // Call FetchPage
+    page_id_t page_id = 1; // Replace with the desired page ID
+    Page *page = buffer_pool_manager.FetchPage(page_id);
+
+    // Check if the page is fetched successfully
+    ASSERT_NE(page, nullptr);
+
+    // Print the fetched page's information
+    std::cout << "Fetched Page ID: " << page->GetPageId() << std::endl;
+    std::cout << "Fetched Page Data: " << page->GetData() << std::endl;
+}
 
 int main(int argc, char **argv)
 {
